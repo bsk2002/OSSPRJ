@@ -28,86 +28,101 @@ do
 	echo "6. Get the data of the winning team by the largest difference on home stadium in teams.csv & matches.csv"
 	echo "7. Exit"
 	read -p "Enter your CHOICE (1~7) : " choice
+	if [ $choice -gt 7 ] || [ $choice -lt 1 ]
+	then
+		echo "retry!"
+	else
+		case "$choice" in
 
-	case "$choice" in
+			1) read -p "Do you want to get the Heung-Min Son's data? (y/n) : " yn
+				if [ "$yn" = "y" ]
+				then
+					cat $2 | awk -F, '$1~"Heung"{print "Team:"$4", Apperance:"$6", Goal:"$7", Assist:"$8}'
+				else
+					echo "retry!"
+				fi;;
 
-		1) read -p "Do you want to get the Heung-Min Son's data? (y/n) : " yn
-			if [ "$yn" = "y" ]
+
+			2) read -p "What do you want to get the team data of league_position[1~20] : " grade
+				if [ $grade -gt 20 ] || [ $grade -lt 1 ]
+				then
+					echo "retry!"
+				else
+					cat $1 | awk -F, -v a=$grade '$6==a{print $6,$1,$2/($2+$3+$4)}'
+				fi;;
+
+
+			3) read -p "Do you want to know Top-3 attendance data and average attendance? (y/n) : " yn
+				if [ "$yn" = "y" ]
+				then
+					echo "***Top-3 Attendance Match***"
+					cat $3 | sort -t, -r -nk 2 | head -n 3 | awk -F, '{print"\n" $3" vs "$4 " ("$1")" "\n" $2" " $7}'
+				else
+					echo "retry!"
+				fi;;
+
+			4) read -p "Do you want to get each team's ranking and the highest-scoring player? (y/n) : " yn
+				if [ "$yn" = "y" ]
+				then
+	
+					for var in $(seq 1 20)
+					do
+						result=$(cat $1 | awk -F, -v a=$var '$6==a{print $1}')
+						cat $1 | awk -F, -v a="$result" '{if($1==a) print "\n" $6" "$1}'
+						cat $2 | sort -t, -k7,7rn | awk -F, -v team="$result" '$4==team {print $1 " " $7}' | head -n 1
+					
+					done
+					
+				else
+					echo "retry!"
+				fi;;
+	
+			5) read -p "Do you want to modify the format of date? (y/n) : " yn
+				echo ""
+				if [ "$yn" = "y" ]
+				then
+					cat $3 | head -n 11 |  awk -F, '$1~"A"{print $1}' | sed 's/\([^ ]*\) \([^ ]*\) \([^ ]*\) \([^ ]*\)/\3\/08\/\2/'
+				else
+					echo "retry!"
+				fi;;
+			6)
+			echo "1) Arsenal		11) Liverpool"
+			echo "2) Tottenham Hotspur	12) Chelsea"
+			echo "3) Manchester City	13) West Ham United"
+			echo "4) Leicester City	14) Watford"
+			echo "5) Crystal Palace	15) Newcastle United"
+			echo "6) Everton 		16) Cardiff City"
+			echo "7) Burnley 		17) Fulham"
+			echo "8) Southampton 		18) Brighton & Hove Albion"
+			echo "9) AFC Bournemouth 	19) Huddersfield Town"
+			echo "10) Manchester United 	20) Wolverhampton Wanderers"
+			read -p "Enter your team number : " num
+			
+			if [ $num -gt 20 ] || [ $num -lt 1 ]
 			then
-				cat $2 | awk -F, '$1~"Heung"{print "Team:"$4", Apperance:"$6", Goal:"$7", Assist:"$8}'
-			else
 				echo "retry!"
+
+			else
+				hometeam=$(cat $1 | awk -F, -v a=$num '(NR-1)==a{print $1}')
+			
+				touch match.txt
+
+				cat $3 | awk -F, -v a="$hometeam" '$3==a{print $5-$6}' | sort -r -n >> match.txt
+		
+		
+				highnum=$(cat match.txt | awk 'NR==1{print}')
+		
+				cat $3 | awk -F, -v a=$highnum -v b="$hometeam" '{if ($3==b && $5-$6==a) print $1"\n"$3" "$5" vs "$6" "$4}'
+
+				rm -rf match.txt
 			fi;;
 
-
-		2) read -p "What do you want to get the team data of league_position[1~20] : " grade
-			cat $1 | awk -F, -v a=$grade '$6==a{print $6,$1,$2/($2+$3+$4)}';;
-
-
-		3) read -p "Do you want to know Top-3 attendance data and average attendance? (y/n) : " yn
-			if [ "$yn" = "y" ]
-			then
-				echo "***Top-3 Attendance Match***"
-				cat $3 | sort -t, -r -nk 2 | head -n 3 | awk -F, '{print"\n" $3" vs "$4 " ("$1")" "\n" $2" " $7}'
-			else
-				echo "retry!"
-			fi;;
-
-		4) read -p "Do you want to get each team's ranking and the highest-scoring player? (y/n) : " yn
-			if [ "$yn" = "y" ]
-			then
-
-				for var in $(seq 1 20)
-				do
-					result=$(cat $1 | awk -F, -v a=$var '$6==a{print $1}')
-					cat $1 | awk -F, -v a="$result" '{if($1==a) print "\n" $6" "$1}'
-					cat $2 | sort -t, -k7,7rn | awk -F, -v team="$result" '$4==team {print $1 " " $7}' | head -n 1
-				
-				done
-				
-			else
-				echo "retry!"
-			fi;;
-
-		5) read -p "Do you want to modify the format of date? (y/n) : " yn
-			echo ""
-			if [ "$yn" = "y" ]
-			then
-				cat $3 | head -n 11 |  awk -F, '$1~"A"{print $1}' | sed 's/\([^ ]*\) \([^ ]*\) \([^ ]*\) \([^ ]*\)/\3\/08\/\2/'
-			else
-				echo "retry!"
-			fi;;
-		6)
-		echo "1) Arsenal		11) Liverpool"
-		echo "2) Tottenham Hotspur	12) Chelsea"
-		echo "3) Manchester City	13) West Ham United"
-		echo "4) Leicester City	14) Watford"
-		echo "5) Crystal Palace	15) Newcastle United"
-		echo "6) Everton 		16) Cardiff City"
-		echo "7) Burnley 		17) Fulham"
-		echo "8) Southampton 		18) Brighton & Hove Albion"
-		echo "9) AFC Bournemouth 	19) Huddersfield Town"
-		echo "10) Manchester United 	20) Wolverhampton Wanderers"
-		read -p "Enter your team number : " num
-
-		hometeam=$(cat $1 | awk -F, -v a=$num '(NR-1)==a{print $1}')
-		
-		touch match.txt
-
-		cat $3 | awk -F, -v a="$hometeam" '$3==a{print $5-$6}' | sort -r -n >> match.txt
-		
-		
-		highnum=$(cat match.txt | awk 'NR==1{print}')
-		
-		cat $3 | awk -F, -v a=$highnum -v b="$hometeam" '{if ($3==b && $5-$6==a) print $1"\n"$3" "$5" vs "$6" "$4}'
-
-		rm -rf match.txt
-		;;
-
 		
 
 
 
-		7) echo "Bye!"
-	esac
+			7) echo "Bye!"
+		
+		esac
+	fi
 done
