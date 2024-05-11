@@ -1,13 +1,13 @@
 #!/bin/bash
 if [ $# -ne 3 ]
 then
-	echo "usage: ./oss-prj.sh teams.csv players.csv. matches.csv"
+	echo "usage: ./prj1_12211607_ParkSangkyoung teams.csv players.csv. matches.csv"
 	exit 1
 else
        	if [ "$1" != "teams.csv" ] || [ "$2" != "players.csv" ] || [ "$3" != "matches.csv" ]
 	then
 		echo "check the file name and order"
-		echo "usage: ./oss-prj.sh teams.csv players.csv matches.csv"
+		echo "usage: ./prj1_12211607_ParkSangkyoung.sh teams.csv players.csv matches.csv"
 		exit 1
 	fi
 fi
@@ -41,14 +41,14 @@ do
 
 
 		2) read -p "What do you want to get the team data of league_position[1~20] : " grade
-			cat teams.csv | awk -F, -v a=$grade '$6==a{print $6,$1,$2/($2+$3+$4)}';;
+			cat $1 | awk -F, -v a=$grade '$6==a{print $6,$1,$2/($2+$3+$4)}';;
 
 
 		3) read -p "Do you want to know Top-3 attendance data and average attendance? (y/n) : " yn
 			if [ "$yn" = "y" ]
 			then
 				echo "***Top-3 Attendance Match***"
-				cat matches.csv | sort -t, -r -nk 2 | head -n 3 | awk -F, '{print"\n" $3" vs "$4 " ("$1")" "\n" $2" " $7}'
+				cat $3 | sort -t, -r -nk 2 | head -n 3 | awk -F, '{print"\n" $3" vs "$4 " ("$1")" "\n" $2" " $7}'
 			else
 				echo "retry!"
 			fi;;
@@ -59,9 +59,9 @@ do
 
 				for var in $(seq 1 20)
 				do
-					result=$(cat teams.csv | awk -F, -v a=$var '$6==a{print $1}')
-					cat teams.csv | awk -F, -v a="$result" '{if($1==a) print $6" "$1}'
-					cat players.csv | sort -t, -k7,7rn | awk -F, -v team="$result" '$4==team {print $1 " " $7}' | head -n 1
+					result=$(cat $1 | awk -F, -v a=$var '$6==a{print $1}')
+					cat $1 | awk -F, -v a="$result" '{if($1==a) print "\n" $6" "$1}'
+					cat $2 | sort -t, -k7,7rn | awk -F, -v team="$result" '$4==team {print $1 " " $7}' | head -n 1
 				
 				done
 				
@@ -70,10 +70,10 @@ do
 			fi;;
 
 		5) read -p "Do you want to modify the format of date? (y/n) : " yn
-
+			echo ""
 			if [ "$yn" = "y" ]
 			then
-				cat matches.csv | head -n 10 |  awk -F, '{print $1}' | sed 's/\([^ ]*\) \([^ ]*\) \([^ ]*\) \([^ ]*\)/\3\/08\/\2/'
+				cat $3 | head -n 11 |  awk -F, '$1~"A"{print $1}' | sed 's/\([^ ]*\) \([^ ]*\) \([^ ]*\) \([^ ]*\)/\3\/08\/\2/'
 			else
 				echo "retry!"
 			fi;;
@@ -90,16 +90,16 @@ do
 		echo "10) Manchester United 	20) Wolverhampton Wanderers"
 		read -p "Enter your team number : " num
 
-		hometeam=$(cat teams.csv | awk -F, -v a=$num '(NR-1)==a{print $1}')
+		hometeam=$(cat $1 | awk -F, -v a=$num '(NR-1)==a{print $1}')
 		
 		touch match.txt
 
-		cat matches.csv | awk -F, -v a="$hometeam" '$3==a{print $5-$6}' | sort -r -n >> match.txt
+		cat $3 | awk -F, -v a="$hometeam" '$3==a{print $5-$6}' | sort -r -n >> match.txt
 		
 		
 		highnum=$(cat match.txt | awk 'NR==1{print}')
 		
-		cat matches.csv | awk -F, -v a=$highnum -v b="$hometeam" '{if ($3==b && $5-$6==a) print $1"\n"$3" "$5" vs "$6" "$4}'
+		cat $3 | awk -F, -v a=$highnum -v b="$hometeam" '{if ($3==b && $5-$6==a) print $1"\n"$3" "$5" vs "$6" "$4}'
 
 		rm -rf match.txt
 		;;
